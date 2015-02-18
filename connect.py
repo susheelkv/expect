@@ -145,59 +145,6 @@ class ssh(object):
             return False
         # Close log file
         f.close()
-    
-    # -----------------------------------
-    # @name
-    #   doscp()
-    # -----------------------------------
-    def __doscp(self, src, dst, 
-	      remote=0, remotehost="", remotepasswd=""):
-        # run scp on the local host
-        if remote:
-	    dstpath = 'root@' + remotehost + ':' + dst
-	    #print '>>>> src is.. ', src
-	    #print '>>>> dst is.. ', dstpath
-            child = self.spId
-	    print '>>>> scp %s to remote host' %src
-	    cmd = 'scp ' + src + ' ' + dstpath
-	    child.sendline('scp ' + src + ' ' + dstpath)
-            print '>>>> SEND: %s' %cmd
-
-	else:
-            #if  not os.path.isfile(src):
-            #    print '>>>> ERROR: Cannot find file, Quitting.. ', src
-            #    return 0
-	    print '>>>> scp %s from local host' %src
-	    dstpath = 'root@' + self.host + ':' + dst
-	    cmd = 'scp ' + src + ' ' + dstpath
-            child = pexpect.spawn(cmd) 
-            print '>>>> SEND: %s' %cmd
-            #child = pexpect.spawn('scp %s %s@%s:%s'
-	    #		         %(src, 'root', self.host, dstpath))
-	# expect password
-	i = child.expect([pexpect.TIMEOUT, self.SSH_NEWKEY, '[Pp]assword: '])
-         
-	s = self.formatout(str(child.before))
-	print s
-	#print '>>>> RECV: ' + str(child.before) + str(child.after)
-        if i == 0: # Timeout
-            print '>>>> ERROR!'
-            print '>>>> SCP could not login. Here is what SCP said: ' + \
-                   str(child.before) + str(child.after)
-            sys.exit (1)
-        if i == 1: # SCP does not have the public key. Just accept it.
-            child.sendline ('yes')
-            child.expect ('[Pp]assword: ')
-        # Send the password
-	print '>>>> RECV: Password: \n'
-        child.sendline(self.password)
-        print '>>>> SEND: ******\n'
-        # Wait for a while
-        time.sleep(12)
-	s = self.formatout(str(child.before))
-	print s
-
-	return True
 
     # -----------------------------------
     # @name
