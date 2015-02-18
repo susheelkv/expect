@@ -14,7 +14,6 @@ import pexpect
 import getpass
 import socket
 
-from shutil import *
 from datetime import datetime
 from threading import Thread
 
