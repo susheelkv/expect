@@ -34,8 +34,9 @@ class ssh(object):
     # @name
     #   __init__()
     # -----------------------------------
-    def __init__(self, host, password, DBG=1):
+    def __init__(self, user, host, password, DBG=1):
         # constructor funct
+	self.user     = user
 	self.host     = host
 	self.password = password
 	self.DBG      = DBG
@@ -45,45 +46,53 @@ class ssh(object):
     #   connect()
     # -----------------------------------
     def connect(self):
-	user = 'root'
+	#user = 'root'
 	err = ''
         # spawn pexpect session
 	print "\n>>>> Open ssh session to %s \n" %self.host
 	try:
-            child = pexpect.spawn('ssh -l %s %s'%(user, self.host))
+            child = pexpect.spawn('ssh -l %s %s'%(self.user, self.host))
             i = child.expect([pexpect.TIMEOUT, 
     			 self.SSH_NEWKEY,
     			 self.KEY_CHANGED,
-    			 '[Pp]assword: '])
+                         '[Pp]assword:.*'])
+                         #\s', '[Pp]assword:'])
             if i == 0: # Timeout
-    	        err = '>>>> ERROR: \n'
-    	        err = err + '>>>> SSH could not login. Here is what SSH said:\n'
-    	        err = err + '>>>> ' + child.before + child.after
+                print '>>>> Case i = 0'
+    	        #err = '>>>> ERROR: \n'
+    	        #err = err + '>>>> SSH could not login. Here is what SSH said:\n'
+    	        #err = err + '>>>> ' + child.before + child.after
     	        child = None
                 print err
             if i == 1: # SSH does not have the public key. Just accept it.
+                print '>>>> Case i = 1'
                 child.sendline ('yes')
                 child.expect ('[Pp]assword: ')
             if i == 2: # SSH Key has changed. Return Error
+                print '>>>> Case i = 2'
     	        err = '>>>> ERROR: \n'
     	        err = err + '>>>> SSH has changed\n'
     	        err = err + '>>>> ' + child.before + child.after
     	        child = None
-    	        print err
+    	    print err
             # Send the password
+            print '>>>> Sending password to remote host'
             child.sendline(self.password)
             # Now we are either at the command prompt or
             # the SSH login process is asking for our terminal type.
             i = child.expect (['Permission denied', self.TERMINAL_PROMPT, self.COMMAND_PROMPT])
             if i == 0:
+                print '>>>> Case i = 0 after send'
                 err = '>>>> ERROR: Permission denied on host:' + self.host + '\n'
     	        err = err + '>>>> ' + 'Possibly wrong password'
     	        child = None
     	        print err
             if i == 1:
+                print '>>>> Case i = 1 after send'
                 child.sendline (self.TERMINAL_TYPE)
                 child.expect (self.COMMAND_PROMPT)
-	except Exception:
+	except Exception as detail:
+            print '>>>> ERROR: Handling run time error..', detail
             print '>>>> ERROR: SSH session to %s failed \n' %self.host
 	    return None
         return child
@@ -202,17 +211,7 @@ class ssh(object):
 
         return 1
 
-
-# -----------------------------------
-# Main function
-# -----------------------------------
-def main():
-    # main func
-    host = '172.19.208.161'
-    password = 'netapp'
-    sn = ssh(host, password)
-    sn.runcmd(sn.spId, 'ls -lsa')
- 
+def testscp():
     # test the new doscp func
     #src = './conf/krb5.conf'
     #dst = '/tmp'
@@ -222,6 +221,23 @@ def main():
     #src = '/tmp/lnx18towin113.pcap'
     #dst = './'
     #sn.doscp(src, dst, 'from')
+    return 1
+
+
+# -----------------------------------
+# Main function
+# -----------------------------------
+def main():
+    # main func
+    #host = '10.53.17.156'
+    #password = 'netapp1!'
+    #sn = ssh('admin', host, password)
+    #sn.runcmd(sn.spId, 'run local version')
+
+    host = '172.19.208.161'
+    password = 'netapp'
+    sn = ssh('root', host, password)
+    sn.runcmd(sn.spId, 'ls -lsa')
 
     return 1
 
